@@ -18,10 +18,17 @@ set_source_files_properties(
   COMPILE_FLAGS "-w"
 )
 
+file(GLOB LIBKIRK_SRC src/module/libkirk/*.c)
+set_source_files_properties(
+  ${LIBKIRK_SRC}
+  PROPERTIES
+  COMPILE_FLAGS "-w"
+)
+
 include_directories(fine PRIVATE vendor/xdelta/xdelta3 vendor/xxHash vendor/picojson)
 file(GLOB FINE_SRC CONFIGURE_DEPENDS src/*.cpp src/module/*.cpp)
 
-add_executable(fine ${XDELTA_SRC} ${XXHASH_SRC} ${FINE_SRC})
+add_executable(fine ${XDELTA_SRC} ${XXHASH_SRC} ${LIBKIRK_SRC} ${FINE_SRC})
 add_compile_definitions(SIZEOF_SIZE_T=8 PICOJSON_USE_INT64)
 add_subdirectory(vendor/spdlog)
 target_compile_options(fine PRIVATE -Wall -Wextra -Wstrict-aliasing=0 -fno-rtti -O3)

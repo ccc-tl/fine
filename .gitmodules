@@ -1,0 +1,12 @@
+[submodule "vendor/picojson"]
+	path = vendor/picojson
+	url = https://github.com/kazuho/picojson
+[submodule "vendor/spdlog"]
+	path = vendor/spdlog
+	url = https://github.com/gabime/spdlog
+[submodule "vendor/xdelta"]
+	path = vendor/xdelta
+	url = https://github.com/jmacd/xdelta
+[submodule "vendor/xxHash"]
+	path = vendor/xxHash
+	url = https://github.com/Cyan4973/xxHash

@@ -1,6 +1,9 @@
 ## Building on Windows
 
-- Install MSYS2 MinGW 64-bit toolchain including `cmake`
+- Install MSYS2 and MinGW 64-bit toolchain including `cmake`
+```
+pacman -S base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake
+```
 - Pull submodules
 ```
 git submodule update --init --recursive

@@ -280,16 +280,12 @@ class FatePatcher {
         for (picojson::value patternValue : patterns) {
             picojson::object pattern = patternValue.get<picojson::object>();
             std::string replaceWith = pattern["replaceWith"].get<std::string>();
+            i32 clearSize = pattern["clearSize"].get<i64>();
             spdlog::trace("Processing pattern, replace with: {}", replaceWith);
             picojson::array offsets = pattern["offsets"].get<picojson::array>();
             for (picojson::value offsetValue : offsets) {
                 outputIso->seek(filePosition + offsetValue.get<i64>());
-                u32 origLen = 0;
-                while (outputIso->readByte() != 0) {
-                    origLen++;
-                }
-                outputIso->seek(filePosition + offsetValue.get<i64>());
-                outputIso->writeFully(ByteBuffer(origLen));
+                outputIso->writeFully(ByteBuffer(clearSize));
                 outputIso->seek(filePosition + offsetValue.get<i64>());
                 outputIso->writeString(replaceWith, replaceWith.size());
             }

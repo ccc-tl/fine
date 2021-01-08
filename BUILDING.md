@@ -1,6 +1,9 @@
 ## Building on Windows
 
-- Install MSYS2 MinGW 64-bit toolchain including `cmake`
+- Install MSYS2 and MinGW 64-bit toolchain including `cmake`
+```
+pacman -S base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake
+```
 - Pull submodules
 ```
 git submodule update --init --recursive
@@ -59,4 +62,13 @@ Recommended `.vscode/c_cpp_properties.json`
     ],
     "version": 4
 }
+```
+
+## Building on Linux
+
+```
+sudo apt install build-essential cmake
+git submodule update --init --recursive
+cmake .
+make
 ```

@@ -87,7 +87,7 @@ void BufferStreamIO::writeFully(const u8* buf, i64 len) {
     if (position + len > dataLen) {
         bail("Buffer overflow in BufferStreamIO.writeFully");
     }
-    memcpy(data + position, buf, len);
+    std::memcpy(data + position, buf, len);
     position += len;
 }
 
@@ -95,6 +95,6 @@ void BufferStreamIO::readFully(u8* buf, i64 len) {
     if (position + len > dataLen) {
         bail("Buffer EOF in BufferStreamIO.readFully");
     }
-    memcpy(buf, data + position, len);
+    std::memcpy(buf, data + position, len);
     position += len;
 }

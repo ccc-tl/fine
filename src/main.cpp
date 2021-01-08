@@ -111,7 +111,7 @@ int wmain(int argc, const wchar_t* argv[]) {
 static void setupWorkingDirectory(const char* arg0) {
     spdlog::info("Init: setup working directory");
     auto dir = fs::weakly_canonical(fs::path(arg0)).parent_path();
-    spdlog::info("Init: changing working directory to {}", dir);
+    spdlog::info("Init: changing working directory to {}", dir.u8string());
     chdir(dir.c_str());
 }
 

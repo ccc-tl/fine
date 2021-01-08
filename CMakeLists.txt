@@ -11,7 +11,7 @@ set_source_files_properties(
   COMPILE_FLAGS "-w"
 )
 
-file(GLOB XXHASH_SRC vendor/xxHash/*.c)
+file(GLOB XXHASH_SRC vendor/xxHash/xxhash.c)
 set_source_files_properties(
   ${XXHASH_SRC}
   PROPERTIES
@@ -25,10 +25,15 @@ add_executable(fine ${XDELTA_SRC} ${XXHASH_SRC} ${FINE_SRC})
 add_compile_definitions(SIZEOF_SIZE_T=8 PICOJSON_USE_INT64)
 add_subdirectory(vendor/spdlog)
 target_compile_options(fine PRIVATE -Wall -Wextra -Wstrict-aliasing=0 -fno-rtti -O3)
-target_link_libraries(fine -municode -static spdlog::spdlog -s)
+if (WIN32)
+  set(OS_LINK_FLAGS "-municode")
+else()
+  set(OS_LINK_FLAGS)
+endif()
+target_link_libraries(fine ${OS_LINK_FLAGS} -static spdlog::spdlog -s)
 set_target_properties(fine
-    PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/target"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/target"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/target"
+  PROPERTIES
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/target"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/target"
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/target"
 )

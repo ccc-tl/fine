@@ -63,3 +63,12 @@ Recommended `.vscode/c_cpp_properties.json`
     "version": 4
 }
 ```
+
+## Building on Linux
+
+```
+sudo apt install build-essential cmake
+git submodule update --init --recursive
+cmake .
+make
+```

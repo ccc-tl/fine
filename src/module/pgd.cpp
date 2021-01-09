@@ -48,7 +48,7 @@ void PgdStreamFile::decryptPartially(u64 pgdOffset, ByteBuffer& outputBuf) {
         input.readFully(blockBuf);
         pgd_decrypt_block(pgd, startingBlock + 1 + i);
 
-        output.writeFully(blockBuf.data(), std::min((usize)blockSize, outputBuf.size() - output.pos()));
+        output.writeFully(blockBuf.data(), std::min((u64)blockSize, outputBuf.size() - output.pos()));
         if (output.pos() >= (i64)outputBuf.size()) {
             break;
         }

@@ -33,11 +33,13 @@ add_compile_definitions(SIZEOF_SIZE_T=8 PICOJSON_USE_INT64)
 add_subdirectory(vendor/spdlog)
 target_compile_options(fine PRIVATE -Wall -Wextra -Wstrict-aliasing=0 -fno-rtti -O3)
 if (WIN32)
-  set(OS_LINK_FLAGS "-municode")
-else()
+  set(OS_LINK_FLAGS "-municode -static -s")
+elseif(APPLE)
   set(OS_LINK_FLAGS)
+else()
+  set(OS_LINK_FLAGS "-s")
 endif()
-target_link_libraries(fine ${OS_LINK_FLAGS} -static spdlog::spdlog -s)
+target_link_libraries(fine ${OS_LINK_FLAGS} spdlog::spdlog)
 set_target_properties(fine
   PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/target"

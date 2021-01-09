@@ -1,0 +1,41 @@
+name: Build fine for Fate
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{matrix.os}}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        ref: fate
+        submodules: recursive
+
+    - name: Configure environment
+      if: matrix.os == 'ubuntu-latest'
+      shell: bash
+      run: |
+        echo "CC=gcc-9" >> $GITHUB_ENV
+        echo "CXX=g++-9" >> $GITHUB_ENV
+
+    - name: Configure
+      shell: bash
+      working-directory: ${{github.workspace}}
+      run: cmake $GITHUB_WORKSPACE
+
+    - name: Build
+      shell: bash
+      working-directory: ${{github.workspace}}
+      run: make
+
+    - name: Upload
+      uses: actions/upload-artifact@v2
+      with:
+        name: fine-${{matrix.os}}
+        path: ${{github.workspace}}/target

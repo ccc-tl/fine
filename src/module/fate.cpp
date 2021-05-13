@@ -4,6 +4,11 @@
 
 #define MODULE_VERSION "fate-v3"
 
+static const u64 HASH_EXTRA_US_RETAIL = 5589170732003281493u;
+static const u64 HASH_EXTRA_US_PSN = 2546740178387844575u;
+static const u64 HASH_CCC_JP_RETAIL = 2141807601829812257u;
+static const u64 HASH_CCC_JP_PSN = 15526881314720188917u;
+
 class FatePatcher {
   public:
     FatePatcher(PatchFsFile& patchFs, const fs::path& input, const fs::path& output, const std::vector<std::string>& args)
@@ -11,11 +16,11 @@ class FatePatcher {
     }
 
     void patchExtra() {
-        checkHash(5589170732003281493);
+        const u64 isoHash = checkHash(HASH_EXTRA_US_RETAIL, HASH_EXTRA_US_PSN);
         // iso copy, cpk patching, final changes
         progress = Progress({0.09, 0.9, 0.01});
         commonInit();
-        patchEboot();
+        patchBase(isoHash == HASH_EXTRA_US_RETAIL);
         patchCpkFromManifest("PSP_GAME/USRDIR/data.cpk", [&](ByteBuffer& buf, i64 cpkOffset, i64 offset) {
             inputIso->seek(cpkOffset + offset);
             inputIso->readFully(buf);
@@ -31,11 +36,11 @@ class FatePatcher {
     }
 
     void patchCCC() {
-        checkHash(2141807601829812257);
+        const u64 isoHash = checkHash(HASH_CCC_JP_RETAIL, HASH_CCC_JP_PSN);
         // iso copy, dns decrypt, cpk patching, final changes
         progress = Progress({0.09, 0.1, 0.8, 0.01});
         commonInit();
-        patchEboot();
+        patchBase(isoHash == HASH_CCC_JP_RETAIL);
         patchPmf("DEMO01.PMF");
         patchPmf("DEMO02.PMF");
         const std::string dnsPath = "PSP_GAME/INSDIR/GAME.DNS";
@@ -69,7 +74,7 @@ class FatePatcher {
     std::unique_ptr<Stream> inputIso;
     std::unique_ptr<Stream> outputIso;
 
-    void checkHash(u64 expectedHash) {
+    u64 checkHash(u64 expectedHash, u64 expectedHash2) {
         spdlog::trace("Check input ISO hash");
         Stream iso(input, true);
         i32 hashSize = 4096 * ISO_SECTOR_SIZE;
@@ -79,13 +84,13 @@ class FatePatcher {
         ByteBuffer buf(hashSize);
         iso.readFully(buf);
         u64 hash = XXH64(buf.data(), buf.size(), 0);
-        if (expectedHash != hash) {
-            spdlog::error("ISO hash mismatch! Expected {} but got {}", expectedHash, hash);
+        if (hash != expectedHash && hash != expectedHash2) {
+            spdlog::error("ISO hash mismatch! Expected {} or {} but got {}", expectedHash, expectedHash2, hash);
             spdlog::error("You're trying to patch wrong ISO!");
             bail("Invalid input ISO hash");
-        } else {
-            spdlog::trace("ISO hash is {}", hash);
         }
+        spdlog::debug("ISO hash is {}", hash);
+        return hash;
     }
 
     void commonInit() {
@@ -101,7 +106,7 @@ class FatePatcher {
 
         spdlog::info("Copy ISO to output location");
         fs::remove(output);
-        copyFile(input, output, [& progress = progress](auto current, auto total) { progress.updatePart(current, total); });
+        copyFile(input, output, [&progress = progress](auto current, auto total) { progress.updatePart(current, total); });
 
         spdlog::trace("Open input ISO");
         inputIso = std::make_unique<Stream>(input, true);
@@ -141,9 +146,20 @@ class FatePatcher {
         }
     }
 
-    void patchEboot() {
+    void patchBase(bool retailMode) {
+        if (retailMode) {
+            spdlog::info("ISO type: Retail");
+            patchEboot();
+        } else {
+            spdlog::info("ISO type: PSN");
+            patchEboot("patch://EBOOT-PSN.BIN");
+            patchPsnCompat();
+        }
+    }
+
+    void patchEboot(const std::string& patchName = "patch://EBOOT.BIN") {
         spdlog::info("Patching EBOOT.BIN");
-        ByteBuffer ebootPatch = patchFs.getFileContents("patch://EBOOT.BIN");
+        ByteBuffer ebootPatch = patchFs.getFileContents(patchName);
         patchIsoFile(*outputIso, isoRecords, "PSP_GAME/SYSDIR/EBOOT.BIN", ebootPatch);
     }
 
@@ -155,6 +171,15 @@ class FatePatcher {
         isoPathSs << "PSP_GAME/USRDIR/MOVIE/" << name;
         ByteBuffer patch = patchFs.getFileContents(patchSs.str());
         patchIsoFile(*outputIso, isoRecords, isoPathSs.str(), patch);
+    }
+
+    void patchPsnCompat() {
+        spdlog::info("Patching PARAM.SFO");
+        ByteBuffer paramPatch = patchFs.getFileContents("patch://PARAM-PSN.SFO");
+        patchIsoFile(*outputIso, isoRecords, "PSP_GAME/PARAM.SFO", paramPatch);
+        spdlog::info("Patching OPNSSMP.BIN");
+        ByteBuffer opnsmpPatch = patchFs.getFileContents("patch://OPNSSMP-PSN.BIN");
+        patchIsoFile(*outputIso, isoRecords, "PSP_GAME/SYSDIR/OPNSSMP.BIN", opnsmpPatch);
     }
 
     std::unique_ptr<PgdStreamFile> decryptGameDns(const std::string& dnsPath) {

@@ -11,7 +11,7 @@ Patching toolset.
 - CPK decompression
 - Running external tools (Windows only)
 
-Bundled libraries
+Bundled libraries:
 - JSON parsing: picojson
 - Logging: spdlog
 - Patching: xdelta3
